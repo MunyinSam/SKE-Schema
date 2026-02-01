@@ -1,0 +1,5 @@
+node_modules/
+mssql/
+monio-data/
+dist/
+.github/

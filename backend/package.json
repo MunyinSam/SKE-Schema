@@ -1,22 +1,40 @@
 {
-  "name": "skeschema",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MunyinSam/SKE-Schema.git"
-  },
-  "author": "MunyinSam",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/MunyinSam/SKE-Schema/issues"
-  },
-  "homepage": "https://github.com/MunyinSam/SKE-Schema#readme",
-  "dependencies": {
+	"name": "skeschema",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/server.js",
+	"scripts": {
+		"dev": "ts-node-dev --respawn --transpile-only --exit-child --clear src/server.ts",
+		"build": "tsc --build --verbose",
+		"start": "node dist/server.js",
+		"start:prod": "NODE_ENV=production node dist/server.js",
+		"lint": "eslint . --ext .ts --max-warnings 0",
+		"lint:fix": "eslint . --ext .ts --fix",
+		"format": "prettier --write \"src/**/*.ts\"",
+		"format:check": "prettier --check \"src/**/*.ts\"",
+		"type-check": "tsc --noEmit",
+		"test": "jest --runInBand --detectOpenHandles --coverage",
+		"test:watch": "jest --watch",
+		"db:push": "prisma db push",
+		"db:migrate": "prisma migrate deploy",
+		"db:migrate:dev": "prisma migrate dev",
+		"db:generate": "prisma generate",
+		"db:studio": "prisma studio",
+		"clean": "rimraf dist",
+		"prebuild": "npm run clean",
+		"prepare": "prisma generate"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MunyinSam/SKE-Schema.git"
+	},
+	"author": "MunyinSam",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/MunyinSam/SKE-Schema/issues"
+	},
+	"homepage": "https://github.com/MunyinSam/SKE-Schema#readme",
+	"dependencies": {
 		"@prisma/client": "^6.19.0",
 		"bcrypt": "^6.0.0",
 		"cookie-parser": "^1.4.7",
@@ -57,6 +75,7 @@
 		"jest-junit": "^16.0.0",
 		"prettier": "^3.6.2",
 		"prisma": "^6.19.0",
+		"rimraf": "^6.1.2",
 		"supertest": "^7.1.4",
 		"ts-jest": "^29.4.5",
 		"ts-node-dev": "^2.0.0",

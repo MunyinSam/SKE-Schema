@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  role         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  payments     Payment[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id           String            @id @default(cuid())
+  amount       Decimal           @db.Decimal(10, 2)
+  currency     String            @default("USD") @db.VarChar(3)
+  description  String?
+  status       TransactionStatus @default(OPEN)
+  
+  // QR Code for payment
+  qrCode       String            @unique @default(cuid())
+  
+  // Relations
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments     Payment[]         // Track all payment attempts
+  
+  // Metadata
+  category     String?           // e.g., "food", "transport", "utilities"
+  notes        String?           @db.Text
+  
+  // Timestamps
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  expiresAt    DateTime?         // Optional expiry for open transactions
+
+  @@index([userId])
+  @@index([status])
+  @@index([qrCode])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  
+  // Payment details
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("USD") @db.VarChar(3)
+  status           PaymentStatus @default(PENDING)
+  paymentMethod    String        // e.g., "QR_SCAN", "CARD", "CASH", "BANK_TRANSFER"
+  
+  // Relations
+  transactionId    String
+  transaction      Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Payment tracking
+  referenceNumber  String?       // External payment reference
+  scannedAt        DateTime?     // When QR was scanned
+  processedAt      DateTime?     // When payment was processed
+  failureReason    String?       // If failed, why?
+  
+  // Metadata
+  ipAddress        String?
+  userAgent        String?
+  notes            String?       @db.Text
+  
+  // Timestamps
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([transactionId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+enum TransactionStatus {
+  OPEN       // Waiting for payment
+  PAID       // Fully paid
+  PARTIAL    // Partially paid (if supporting partial payments)
+  CANCELLED  // Cancelled
+  EXPIRED    // Expired without payment
+}
+
+enum PaymentStatus {
+  PENDING    // Payment initiated but not confirmed
+  COMPLETED  // Successfully completed
+  FAILED     // Payment failed
+  REFUNDED   // Payment was refunded
+  CANCELLED  // Payment cancelled
+}

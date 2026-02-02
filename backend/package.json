@@ -22,7 +22,7 @@
 		"db:studio": "prisma studio",
 		"clean": "rimraf dist",
 		"prebuild": "npm run clean",
-		"prepare": "prisma generate"
+		"postinstall": "prisma generate || true"
 	},
 	"repository": {
 		"type": "git",

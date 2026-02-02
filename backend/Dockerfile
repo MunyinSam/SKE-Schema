@@ -1,17 +1,51 @@
-FROM node:22-alpine
+# Build stage
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json .
+# Copy package files
+COPY package*.json ./
 
-COPY . .
+# Install dependencies (including devDependencies for build)
+RUN npm ci --ignore-scripts
 
-RUN npm install
+# Copy source code and config files
+COPY tsconfig.json ./
+COPY src ./src
+COPY prisma ./prisma
 
+# Generate Prisma Client (only if schema exists and has datasource)
+RUN if [ -s ./prisma/schema.prisma ] && grep -q "datasource" ./prisma/schema.prisma; then \
+      npx prisma generate; \
+    fi
+
+# Build TypeScript
 RUN npm run build
+
+# Production stage
+FROM node:22-alpine AS production
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production --ignore-scripts
+
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+USER nodejs
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD wget -qO- http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
 
-CMD [ "npm", "start" ]
+CMD ["node", "dist/server.js"]

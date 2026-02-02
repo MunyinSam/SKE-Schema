@@ -29,11 +29,11 @@ jobs:
               with:
                   context: ./backend
                   push: true
-                  tags: ${{ secrets.DOCKER_USER }}/SKE-schema-backend:latest
+                  tags: ${{ secrets.DOCKER_USER }}/skeschema-backend:latest
 
             - name: Build Images & Tag & push Frontend
               uses: docker/build-push-action@v6
               with:
                   context: ./frontend
                   push: true
-                  tags: ${{ secrets.DOCKER_USER }}/SKE-schema-frontend:latest
+                  tags: ${{ secrets.DOCKER_USER }}/skeschema-frontend:latest

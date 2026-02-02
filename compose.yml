@@ -1,0 +1,64 @@
+services:
+    db:
+        image: postgres:16
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-postgres}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+            POSTGRES_DB: ${POSTGRES_DB:-housetutor}
+        ports:
+            - '5432:5432'
+        networks:
+            - prisma-network
+        volumes:
+            - ./postgres/data:/var/lib/postgresql/data
+        env_file:
+            - path: .env
+              required: true
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: skeschema-backend
+        ports:
+            - '${PORT:-8000}:8000'
+        networks:
+            - prisma-network
+        depends_on:
+            db:
+                condition: service_healthy
+        env_file:
+            - path: .env
+              required: true
+        volumes:
+            - ./backend/uploads:/app/uploads
+        command: >
+            sh -c "
+              echo '--- [Backend] Database check complete. Running Prisma migrations...';
+              npm run db:migrate && npm start && echo $DATABASE_URL
+              
+            "
+
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: skeschema-frontend
+        networks:
+            - prisma-network
+        env_file:
+            - path: .env
+              required: true
+        ports:
+            - '8080:3000'
+        depends_on:
+            - backend
+
+networks:
+    prisma-network:

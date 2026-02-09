@@ -1,3 +1,3 @@
 SKE-Schema
 
-Platform for transparent financial usage for SKE-22
+Platform for file sharing and transparent financial usage for SKE-22

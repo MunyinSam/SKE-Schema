@@ -2,28 +2,27 @@ import { createUser, getUserByEmail } from '@/services/user.service';
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import jwt from 'jsonwebtoken';
-import { Session } from 'next-auth';
-import { JWT } from 'next-auth/jwt';
-
-interface CustomSession extends Session {
-	backendToken?: string;
-	userId?: string;
-}
-
-interface CustomJWT extends JWT {
-	backendToken?: string;
-	userId?: string;
-}
 
 const handler = NextAuth({
 	providers: [
 		GoogleProvider({
 			clientId: process.env.GOOGLE_CLIENT_ID ?? '',
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+			authorization: {
+				params: {
+					prompt: 'consent',
+					access_type: 'offline',
+					response_type: 'code',
+				},
+			},
 		}),
 	],
 	session: {
 		strategy: 'jwt',
+	},
+	pages: {
+		signIn: '/auth/login',
+		error: '/auth/error',
 	},
 	callbacks: {
 		async signIn({ user, account, profile }) {
@@ -76,11 +75,8 @@ const handler = NextAuth({
 			// Send backend token and userId to client
 			if (session.user) {
 				session.backendToken =
-					typeof token.backendToken === 'string'
-						? token.backendToken
-						: undefined;
-				session.userId =
-					typeof token.userId === 'string' ? token.userId : undefined;
+					typeof token.backendToken === 'string' ? token.backendToken : undefined;
+				session.userId = typeof token.userId === 'string' ? token.userId : undefined;
 			}
 			return session;
 		},

@@ -5,7 +5,10 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
+import { authMiddleware } from './middleware/auth.middleware';
+
 import userRouter from './routes/user.route';
+import fileRouter from './routes/file.route';
 
 // Initialize Express app
 const app: Express = express();
@@ -69,8 +72,8 @@ function configureRoutes(app: Express): void {
 	apiV1Router.use(limiter);
 
 	// routes
-
-	apiV1Router.use('/user', userRouter)
+	apiV1Router.use('/user', userRouter);
+	apiV1Router.use('/files', fileRouter);
 
 	// Mount v1 API router
 	app.use('/api/v1', apiV1Router);

@@ -23,9 +23,9 @@ router.get('/email', getUserByEmailController);
 router.get('/:id', getUserByIdController);
 
 // PATCH /api/v1/users/:id - Update user
-router.patch('/:id', updateUserController);
+// router.patch('/:id', updateUserController);
 
 // DELETE /api/v1/users/:id - Delete user
-router.delete('/:id', deleteUserController);
+// router.delete('/:id', deleteUserController);
 
 export default router;

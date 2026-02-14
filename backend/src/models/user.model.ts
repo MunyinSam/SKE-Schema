@@ -8,8 +8,8 @@ export const createUser = async (
 ) => {
 	const pool: Pool = await getDbConnection();
 	const queryText = `
-        INSERT INTO users (id, email, name)
-        VALUES ($1, $2, $3)
+        INSERT INTO users (id, email, name, "updatedAt")
+        VALUES ($1, $2, $3, NOW())
         RETURNING *;
     `;
 
@@ -28,7 +28,8 @@ export const updateUser = async (
         UPDATE users
         SET 
             email = $2, 
-            name = $3
+            name = $3,
+            "updatedAt" = NOW()
         WHERE id = $1
         RETURNING *;
     `;

@@ -31,3 +31,16 @@ export const createUser = async (body: CreateUserBody): Promise<t.User> => {
 	const { data } = await serverInstance.post('/', body);
 	return data;
 };
+
+export const getUserByEmail = async (email: string): Promise<t.User | null> => {
+	try {
+		const serverInstance = getServerInstance();
+		const { data } = await serverInstance.get('/email', { params: { email } });
+		return data;
+	} catch (error) {
+		if (axios.isAxiosError(error) && error.response?.status === 404) {
+			return null;
+		}
+		throw error;
+	}
+};

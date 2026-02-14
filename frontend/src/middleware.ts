@@ -14,6 +14,7 @@ async function customMiddleware(request: NextRequest) {
 		}
 
 		const token = await getToken({ req: request });
+		console.log('Middleware - Token found:', !!token?.backendToken);
 
 		const path = request.nextUrl.pathname.replace('/api/proxy', '/api/v1');
 
@@ -23,9 +24,14 @@ async function customMiddleware(request: NextRequest) {
 		});
 
 		const headers = new Headers(request.headers);
-		if (token?.accessToken) {
-			headers.set('Authorization', `Bearer ${token.accessToken}`);
+		if (token?.backendToken) {
+			headers.set('Authorization', `Bearer ${token.backendToken}`);
+			console.log('Middleware - Authorization header set');
+		} else {
+			console.log('Middleware - No token available');
 		}
+
+		console.log('Middleware - Proxying to:', newUrl.toString());
 
 		return NextResponse.rewrite(newUrl, {
 			request: {

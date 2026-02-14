@@ -56,7 +56,7 @@ export const getFileById = async (id: string): Promise<FileMetadata | null> => {
     `;
 
 	const values = [id];
-	const result = await pool.query(queryText);
+	const result = await pool.query(queryText, values);
 	return result.rows[0] || null;
 };
 

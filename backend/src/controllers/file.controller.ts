@@ -21,7 +21,7 @@ export const uploadFileController = async (
 		}
 
 		// Get user ID from auth middleware
-		const userId = (req as any).userId;
+		const userId = req.user?.id;
 		if (!userId) {
 			// Delete uploaded file if user not authenticated
 			fs.unlinkSync(req.file.path);
@@ -94,16 +94,27 @@ export const downloadFileController = async (
 	res: Response
 ): Promise<void> => {
 	try {
+		console.log('Download request received for ID:', req.params.id);
+		console.log('Authorization header:', req.headers.authorization);
+
 		const id = req.params.id as string;
 		const file = await getFileById(id);
 
 		if (!file) {
+			console.error('File not found in database:', id);
 			res.status(404).json({ error: 'File not found' });
 			return;
 		}
 
+		console.log('File found:', {
+			id: file.id,
+			path: file.path,
+			originalName: file.originalName,
+		});
+
 		// Check if file exists on disk
 		if (!fs.existsSync(file.path)) {
+			console.error(`File not found on disk: ${file.path}`);
 			res.status(404).json({ error: 'File not found on server' });
 			return;
 		}
@@ -119,12 +130,22 @@ export const downloadFileController = async (
 		);
 		res.setHeader('Content-Length', file.size.toString());
 
-		// Stream file to client
+		// Stream file to client with error handling
 		const fileStream = fs.createReadStream(file.path);
+
+		fileStream.on('error', (streamError) => {
+			console.error('File stream error:', streamError);
+			if (!res.headersSent) {
+				res.status(500).json({ error: 'Failed to read file' });
+			}
+		});
+
 		fileStream.pipe(res);
 	} catch (error) {
 		console.error('Error downloading file:', error);
-		res.status(500).json({ error: 'Failed to download file' });
+		if (!res.headersSent) {
+			res.status(500).json({ error: 'Failed to download file' });
+		}
 	}
 };
 
@@ -135,7 +156,7 @@ export const deleteFileController = async (
 ): Promise<void> => {
 	try {
 		const id = req.params.id as string;
-		const userId = (req as any).userId;
+		const userId = req.user?.id;
 
 		if (!userId) {
 			res.status(401).json({ error: 'Unauthorized' });
